@@ -11,6 +11,45 @@
  *
  * @since 19/05/2010
  */
+// Function to get the client IP address
+// Copied from OUS CodeIgniter base code
+function getClientIp()
+{
+    $ipaddress = NULL;
+    if (isset($_SERVER['HTTP_CLIENT_IP']))
+        $ipaddress = $_SERVER['HTTP_CLIENT_IP'];
+    else if(isset($_SERVER['HTTP_X_FORWARDED_FOR']))
+        $ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
+    else if(isset($_SERVER['HTTP_X_FORWARDED']))
+        $ipaddress = $_SERVER['HTTP_X_FORWARDED'];
+    else if(isset($_SERVER['HTTP_FORWARDED_FOR']))
+        $ipaddress = $_SERVER['HTTP_FORWARDED_FOR'];
+    else if(isset($_SERVER['HTTP_FORWARDED']))
+        $ipaddress = $_SERVER['HTTP_FORWARDED'];
+    else if(isset($_SERVER['REMOTE_ADDR']))
+        $ipaddress = $_SERVER['REMOTE_ADDR'];
+
+    if ($ipaddress == '::1')
+        $ipaddress = NULL;
+
+    return $ipaddress;
+}
+
+// OUS Offices only
+define("WHITELIST_IP_ADDRESSES", ['223.25.81.186', '113.161.95.125']);
+
+$clientIp = getClientIp();
+$whitelisted = in_array($clientIp, WHITELIST_IP_ADDRESSES);
+if (!$whitelisted) {
+    header("HTTP/1.0 404 Not Found");
+    die();
+}
+
+$MEMCACHED_HOST = getenv('MEMCACHED_HOST');
+$MEMCACHED_PORT = getenv('MEMCACHED_PORT');
+define('MEMCACHED_HOST', $MEMCACHED_HOST);
+define('MEMCACHED_PORT', $MEMCACHED_PORT);
+
 class Library_Configuration_Loader
 {
     # Singleton
@@ -53,14 +92,16 @@ class Library_Configuration_Loader
         'file_path' => 'Temp/',
         'servers' =>
         array (
-            'Default' =>
-            array (
-                '127.0.0.1:11211' =>
-                array (
-                    'hostname' => '127.0.0.1',
+            'Default' => [
+                'aws' => [
+                    'hostname' => MEMCACHED_HOST,
+                    'port' => MEMCACHED_PORT,
+                ],
+                '127.0.0.1:11211' => [
+                    'hostname' => 'localhost',
                     'port' => '11211',
-                ),
-            ),
+                ]
+            ]
         ),
     );
 

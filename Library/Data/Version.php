@@ -48,6 +48,9 @@ class Library_Data_Version
 			/**
 			 * @todo Get latest tag/release via GitHub API
 			 */
+            if (empty($_latest)) {
+                return true;
+            }
             if($latest = @file_get_contents(self::$_latest))
             {
                 # Saving latest version in file
